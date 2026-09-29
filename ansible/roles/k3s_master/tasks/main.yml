@@ -1,0 +1,65 @@
+---
+- name: Verifier si K3s est deja installe sur le master
+  stat:
+    path: /usr/local/bin/k3s
+  register: k3s_master_bin
+
+- name: Installer K3s Server (Control Plane)
+  shell: |
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --tls-san {{ ansible_host }} --flannel-backend=vxlan" sh -
+  when: not k3s_master_bin.stat.exists
+
+- name: Attendre que K3s soit actif
+  systemd:
+    name: k3s
+    state: started
+    enabled: yes
+
+- name: Attendre la generation du token de cluster
+  wait_for:
+    path: /var/lib/rancher/k3s/server/node-token
+    timeout: 60
+
+- name: Recuperer le token du noeud master
+  slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: node_token_b64
+
+- name: Enregistrer le token dans les faits Ansible
+  set_fact:
+    k3s_cluster_token: "{{ node_token_b64['content'] | b64decode | trim }}"
+
+- name: Recuperer le fichier kubeconfig sur le noeud
+  slurp:
+    src: /etc/rancher/k3s/k3s.yaml
+  register: kubeconfig_raw
+
+- name: Sauvegarder le kubeconfig en local sur votre machine
+  delegate_to: localhost
+  become: false
+  copy:
+    content: "{{ kubeconfig_raw['content'] | b64decode | regex_replace('127\\.0\\.0\\.1', ansible_host) }}"
+    dest: "{{ playbook_dir }}/k3s.yaml"
+    mode: '0600'
+
+- name: Lire le fichier de configuration k3s sur le master
+  ansible.builtin.slurp:
+    src: /etc/rancher/k3s/k3s.yaml
+  register: k3s_config
+  become: true
+
+- name: Creer le repertoire local ~/.kube s'il n'existe pas
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.kube"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  become: false
+
+- name: Mettre a jour directement la configuration kubectl locale
+  ansible.builtin.copy:
+    content: "{{ k3s_config.content | b64decode | replace('127.0.0.1', ansible_host) }}"
+    dest: "{{ lookup('env', 'HOME') }}/.kube/config"
+    mode: '0600'
+  delegate_to: localhost
+  become: false

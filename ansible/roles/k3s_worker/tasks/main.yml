@@ -1,0 +1,16 @@
+---
+- name: Verifier si K3s Agent est deja installe
+  stat:
+    path: /usr/local/bin/k3s
+  register: k3s_worker_bin
+
+- name: Installer K3s Agent et rejoindre le cluster
+  shell: |
+    curl -sfL https://get.k3s.io | K3S_URL="https://{{ hostvars[groups['master'][0]]['ansible_default_ipv4']['address'] }}:6443" K3S_TOKEN="{{ hostvars[groups['master'][0]]['k3s_cluster_token'] }}" sh -
+  when: not k3s_worker_bin.stat.exists
+
+- name: S'assurer que le service k3s-agent est demarre
+  systemd:
+    name: k3s-agent
+    state: started
+    enabled: yes

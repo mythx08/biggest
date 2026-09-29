@@ -1,0 +1,35 @@
+---
+- name: Mettre a jour le cache APT
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Installer les paquets de base
+  apt:
+    name:
+      - curl
+      - gnupg2
+      - software-properties-common
+      - apt-transport-https
+      - ca-certificates
+      - iptables
+    state: present
+
+- name: Charger les modules noyau requis pour Kubernetes
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+
+- name: Configurer les parametres sysctl pour le routage bridge
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  loop:
+    - { name: "net.bridge.bridge-nf-call-iptables", value: "1" }
+    - { name: "net.bridge.bridge-nf-call-ip6tables", value: "1" }
+    - { name: "net.ipv4.ip_forward", value: "1" }

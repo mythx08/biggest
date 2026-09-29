@@ -1,0 +1,15 @@
+---
+- name: 1. Preparation du socle systeme sur tous les noeuds
+  hosts: k8s_cluster
+  roles:
+    - common
+
+- name: 2. Deploiement du Control Plane K3s
+  hosts: master
+  roles:
+    - k3s_master
+
+- name: 3. Jonction des Workers au cluster
+  hosts: workers
+  roles:
+    - k3s_worker
