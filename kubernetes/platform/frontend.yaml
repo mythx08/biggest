@@ -19,6 +19,13 @@ spec:
         - name: frontend-ui
           image: mythx08/frontend-ui:1.0.0
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1001
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: 80
               name: http
