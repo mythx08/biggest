@@ -2,7 +2,7 @@
 variable "admin_ip" {
   description = "Your public IP in CIDR notation (e.g., 196.xxx.xxx.xxx/32) for secure administrative access"
   type        = string
-  default     = "105.71.16.181/32" # Replace with your actual IP/32 to satisfy least privilege
+  default     = "196.200.133.184/32" # Replace with your actual IP/32 to satisfy least privilege
 }
 
 resource "aws_security_group" "k3s_sg" {
