@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: backend-api
-          image: mythx08/backend-api:1.0.0
+          image: mythx08/backend-api:1.0.2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000

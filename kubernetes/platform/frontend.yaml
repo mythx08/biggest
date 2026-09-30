@@ -6,7 +6,7 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: frontend
@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend-ui
-          image: mythx08/frontend-ui:1.0.0
+          image: mythx08/frontend-ui:1.0.2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
